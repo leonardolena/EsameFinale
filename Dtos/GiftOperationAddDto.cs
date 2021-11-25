@@ -8,8 +8,8 @@ namespace SantaClausCrm.Dtos
         private int _uncleId = -1;
         public int UncleChristmasId { 
             get {
-            return _uncleId; } 
-            set {
+            return _uncleId; 
+            } set {
                 _uncleId = value;
             } }
     }

@@ -1,3 +1,5 @@
+using SantaClausCrm.DataAccess;
+
 namespace SantaClausCrm.Dtos
 {
     public static class DtoExtension

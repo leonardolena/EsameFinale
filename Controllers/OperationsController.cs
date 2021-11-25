@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using SantaClausCrm.DataAccess;
 using SantaClausCrm.Dtos;
 using SantaClausCrm.Models;
+using System;
 
 namespace SantaClausCrm.Controllers
 {
@@ -29,12 +30,13 @@ namespace SantaClausCrm.Controllers
                 return;
             }
             using var db = _dbFactory.CreateDbContext();
+            
             var model = new GiftOperation {
                 OperationId = dto.OperationId,
                 ElfId = dto.ElfId,
                 GiftId = dto.GiftId,
             };
-            var n = await db.Operations.SingleAsync(k => k.Id == model.Operation.Id);
+            var n = await db.Operations.SingleAsync(o => o.Id == model.Operation.Id);
             if(n.Name == "MessaInSlitta") {
                 if(dto.UncleChristmasId != -1) {
                     model.UncleChristmasId = dto.UncleChristmasId;
@@ -44,8 +46,13 @@ namespace SantaClausCrm.Controllers
                     return;
                 }
             }
-            db.Add(model);
-            await db.SaveChangesAsync();
+            try {
+                db.Add(model);
+                await db.SaveChangesAsync();
+            } catch (Exception ex){
+                _logger.LogInformation(ex,"Unable to save model due to {0}",ex.Message);
+            }
+            
         }
     }
 }
