@@ -30,6 +30,7 @@ namespace SantaClausCrm.Controllers
             return await db.UnclesChristmas
                 .Select(u => new UncleChristmas 
                     {
+                    Id = u.Id,
                     Name = u.Name,
                     CarriedGifts = db.GiftOperations.Count(g => g.UncleChristmasId == u.Id)
                     }
