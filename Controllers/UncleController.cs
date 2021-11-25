@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ using SantaClausCrm.Models;
 namespace SantaClausCrm.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]/[action]")]
     public class UncleController : ControllerBase
     {
         private readonly ILogger<UncleController> _logger;
@@ -26,14 +27,20 @@ namespace SantaClausCrm.Controllers
         [HttpGet]
         public async Task<List<UncleChristmas>> GetUncles() {
             using var db = _dbFactory.CreateDbContext();
-            await db.UnclesChristmas.ForEachAsync(u => u.CarriedGifts = db.GiftOperations.Count(g => g.UncleChristmasId == u.Id));
-            return await db.UnclesChristmas.ToListAsync();               
+            return await db.UnclesChristmas
+                .Select(u => new UncleChristmas 
+                    {
+                    Name = u.Name,
+                    CarriedGifts = db.GiftOperations.Count(g => g.UncleChristmasId == u.Id)
+                    }
+                ).ToListAsync();               
         }
         [HttpPost]
-        public async Task Add(UncleChristmasDto dto) {
+        public async Task<ResultDto> Add(UncleChristmasDto dto) {
             if(!dto.IsValid()) {
+                _logger.LogInformation(new ArgumentException("null_argument"),"Dto inserted is invalid",null);
                 HttpContext.Response.StatusCode = 422;
-                return;
+                return null;
             }
             using var db = _dbFactory.CreateDbContext();
             var model = new UncleChristmas 
@@ -42,6 +49,7 @@ namespace SantaClausCrm.Controllers
             };
             db.Add(model);
             await db.SaveChangesAsync();
+            return new ResultDto { NewId = model.Id };
         } 
     }
 }

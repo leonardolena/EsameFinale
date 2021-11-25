@@ -10,7 +10,7 @@ using System;
 namespace SantaClausCrm.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]/[action]")]
     public class OperationsController : ControllerBase
     {
         private readonly ILogger<OperationsController> _logger;
@@ -24,33 +24,34 @@ namespace SantaClausCrm.Controllers
         }
 
         [HttpPost]
-        public async Task Add(GiftOperationAddDto dto) {
-            if(!dto.IsValid()) {
-                HttpContext.Response.StatusCode = 422;
-                return;
-            }
-            using var db = _dbFactory.CreateDbContext();
-            
-            var model = new GiftOperation {
-                OperationId = dto.OperationId,
-                ElfId = dto.ElfId,
-                GiftId = dto.GiftId,
-            };
-            var n = await db.Operations.SingleAsync(o => o.Id == model.Operation.Id);
-            if(n.Name == "MessaInSlitta") {
-                if(dto.UncleChristmasId != -1) {
-                    model.UncleChristmasId = dto.UncleChristmasId;
-                } else {
-                    db.Dispose();
-                    HttpContext.Response.StatusCode = 422;
-                    return;
-                }
-            }
+        public async Task<ResultDto> Add(GiftOperationAddDto dto) {
             try {
+                if(!dto.IsValid()) {
+                    throw new ArgumentException("The dto inserted wasn't valid");
+                }
+                using var db = _dbFactory.CreateDbContext();               
+                var model = new GiftOperation {
+                    OperationId = dto.OperationId,
+                    ElfId = dto.ElfId,
+                    GiftId = dto.GiftId,
+                };
+                
+                var n = await db.Operations.SingleAsync(o => o.Id == model.Operation.Id);
+                if(n.Name == "MessaInSlitta") {
+                    if(dto.UncleChristmasId != -1) {
+                        model.UncleChristmasId = dto.UncleChristmasId;
+                    } else {
+                        db.Dispose();
+                        throw new ArgumentException("Uncle was not provided");
+                    }
+                }           
                 db.Add(model);
                 await db.SaveChangesAsync();
-            } catch (Exception ex){
-                _logger.LogInformation(ex,"Unable to save model due to {0}",ex.Message);
+                return new ResultDto {NewId = model.Id }; 
+            } catch (Exception ex) {
+                _logger.LogInformation(ex,"Unable to save model because {0}",ex.Message);
+                HttpContext.Response.StatusCode = 422;
+                return null;
             }
             
         }

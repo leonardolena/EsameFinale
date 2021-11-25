@@ -1,6 +1,6 @@
 namespace SantaClausCrm.Dtos
 {
-    public class GiftAddResultDto : Dto
+    public class ResultDto : Dto
     {
         public int NewId { get; set; }
     }

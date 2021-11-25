@@ -7,7 +7,7 @@ namespace SantaClausCrm.Dtos
         public static bool IsValid(this Dto dto) {
             bool result = true;
             var pp = dto.GetType().GetProperties(System.Reflection.BindingFlags.Public);
-            foreach( var p in pp) {
+            foreach(var p in pp) {
                 if(p.PropertyType == typeof(int)) {
                     result &= (int)p.GetValue(dto) != 0;
                 } else {

@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 using SantaClausCrm.DataAccess;
 using SantaClausCrm.Dtos;
 using SantaClausCrm.Models;
+using System;
 
 namespace SantaClausCrm.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]/[action]")]
     public class GiftsController : ControllerBase
     {
         private readonly ILogger<GiftsController> _logger;
@@ -23,9 +24,10 @@ namespace SantaClausCrm.Controllers
         }
 
         [HttpPost]
-        public async Task<GiftAddResultDto> Add(GiftAddDto dto) {
+        public async Task<ResultDto> Add(GiftAddDto dto) {
             if (!dto.IsValid()) {
                 HttpContext.Response.StatusCode = 422;
+                _logger.LogInformation(new ArgumentException("null_argument"),"Dto inserted is invalid",null);
                 return null;
             }
             using var db = _dbFactory.CreateDbContext();
@@ -34,7 +36,7 @@ namespace SantaClausCrm.Controllers
             };
             db.Add(model);
             await db.SaveChangesAsync();
-            return new GiftAddResultDto { NewId =  model.Id };
+            return new ResultDto { NewId =  model.Id };
         }
     }
 }
