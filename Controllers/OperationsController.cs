@@ -34,6 +34,16 @@ namespace SantaClausCrm.Controllers
                 ElfId = dto.ElfId,
                 GiftId = dto.GiftId,
             };
+            var n = await db.Operations.SingleAsync(k => k.Id == model.Operation.Id);
+            if(n.Name == "MessaInSlitta") {
+                if(dto.UncleChristmasId != -1) {
+                    model.UncleChristmasId = dto.UncleChristmasId;
+                } else {
+                    db.Dispose();
+                    HttpContext.Response.StatusCode = 422;
+                    return;
+                }
+            }
             db.Add(model);
             await db.SaveChangesAsync();
         }
