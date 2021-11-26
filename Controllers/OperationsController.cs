@@ -34,24 +34,25 @@ namespace SantaClausCrm.Controllers
                 var model = new GiftOperation {
                     OperationId = dto.OperationId,
                     ElfId = dto.ElfId,
-                    GiftId = dto.GiftId,
+                    GiftId = dto.GiftId,                    
                 };
-                var last = db.GiftOperations.Where(g => g.GiftId == model.GiftId).OrderBy(g => g.Id).Last();
-                var operations = await db.Operations.ToDictionaryAsync(k => k.Id);  
-                var n = operations.ContainsKey(model.OperationId) 
-                    ? operations.Values.Where(k => k.Id == model.OperationId).Single() 
-                    : throw null;
-                if(n.Name == "MessaInSlitta" && last.OperationId == operations.Values.Where(k => k.Name == "Impacchettamento").Single().Id) {
-                    if(dto.UncleChristmasId != -1) {
-                        model.UncleChristmasId = dto.UncleChristmasId;
-                    } else {
-                        db.Dispose();
-                        throw new ArgumentException("Uncle was not provided");
-                    }
-                }  
-                if(n.Name == "Impacchettamento" && last.OperationId == operations.Values.Where(k => k.Name != "Costruzione").Single().Id)   
-                    throw new InvalidOperationException("no packing before construction");   
-                
+                var last = await db.GiftOperations.Where(g => g.GiftId == model.GiftId).DefaultIfEmpty().OrderBy(o => o.Id).LastAsync();
+                if(model.OperationId == (int)OperationChecker.Costruzione && last is null) 
+                {
+                    model.UncleChristmasId = -1;
+                } else if(last.OperationId == (int)OperationChecker.Costruzione 
+                    && model.OperationId == (int)OperationChecker.Impacchettamento)
+                {
+                    model.UncleChristmasId = -1;
+                } else if(last.OperationId == (int)OperationChecker.Impacchettamento 
+                    && dto.UncleChristmasId != -1 
+                    && model.OperationId==(int)OperationChecker.MessaInSlitta) 
+                { 
+                    model.UncleChristmasId = dto.UncleChristmasId;
+                } else {
+                    throw new InvalidOperationException("can't do this");
+                }
+
                 db.Add(model);
                 await db.SaveChangesAsync();
                 return new ResultDto { NewId = model.Id }; 
@@ -62,5 +63,11 @@ namespace SantaClausCrm.Controllers
             }
             
         }
+    }
+    enum OperationChecker
+    {
+        Costruzione = 1,
+        Impacchettamento =2,
+        MessaInSlitta = 3,
     }
 }

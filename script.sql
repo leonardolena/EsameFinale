@@ -31,7 +31,7 @@ create table "GiftOperations" (
     "GiftId" int not null references "Gifts" ("Id"),
     "OperationId" int not null references "Operations" ("Id"),
     "ElfId" int not null references "Elves" ("Id"),
-    "UncleChristmasId" int
+    "UncleChristmasId" int REFERENCES "UnclesChristmas" ("Id")
 );
 
 
@@ -41,6 +41,7 @@ CREATE TABLE "UnclesChristmas" (
     "Name" text not null,
     "CarriedGifts" int DEFAULT 0 
 );
+INSERT into "UncleChristmas" ("Id","Name") VALUES (-1,'none');
 
 // USE IN CASE OF THE CREATOR IS NOT THE CORRECT {user}
 { 
